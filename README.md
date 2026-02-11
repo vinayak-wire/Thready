@@ -1,123 +1,139 @@
-🧵 Thready — A Thread-Creation Bot for Wire
+📜 Available Commands
 
-Thready is a lightweight Kotlin bot built using the
-wire-apps-jvm-sdk
-.
-It allows users to create new group conversations (“threads”) directly from any Wire conversation using simple slash commands.
+All commands must start with /
 
-Thready is ideal for:
+🧵 Conversation Commands
+/thread "Title" @users
 
-Splitting discussions into new groups
+Create a group conversation.
 
-Creating topic-based threads
+/channel "Name" @users
 
-Keeping conversations organised
+Create a channel conversation.
 
-Automating group creation workflows
+/status
 
-🚀 Features
-✔ /thread "Title" @UserA @UserB
+List members and their roles.
 
-Creates a new group conversation with the invoker + the mentioned users.
+/admin @user
+
+Promote user to ADMIN.
+
+/admin all
+
+Promote all members to ADMIN.
+
+/demote
+
+Demote all eligible admins (excluding invoker + app).
+
+/remove
+
+Remove all removable members (excluding invoker + app).
+
+/delete
+
+Delete the current conversation.
+
+💬 Direct Messaging Commands
+/dm @user message
+
+Send a direct message to a specific user.
+
+/dmall message
+
+Send a DM to all members in the conversation (excluding invoker and app).
+
+/dmpingall
+
+Ping all members in DM (no message).
+
+/dmping message
+
+🔥 Broadcast DM with message + Ping to all members.
+
+This:
+
+Creates (or reuses) 1:1 DM
+
+Sends the message
+
+Immediately sends a Ping
+
+Use this for urgent notifications.
 
 Example:
 
-/thread "Release Planning" @anna @markus
+/dmping Urgent maintenance at 10PM
 
+🧠 How DM Logic Works
 
-➡️ Creates a new group “Release Planning” with Anna, Markus, and the command sender.
+When sending DMs:
 
-✔ /newthread
+First tries createOneToOneConversationSuspending
 
-Alias for /thread.
+If creation fails (conversation already exists),
 
-⚠️ Notes
+Falls back to searching stored conversations
 
-The title must be in quotes.
+Reuses existing 1:1 conversation
 
-You must mention at least one user for /thread.
+This prevents MLS handshake duplication issues.
 
-Admin-setting inside the created group is not supported yet (SDK limitation).
+🔐 Safety Rules
 
-MLS (Message Layer Security) currently prevents the bot from sending immediate intro messages inside newly created groups.
+App never removes itself
 
-📦 Project Structure
-ThreadApp/
-├── src/main/kotlin/
-│    └── Main.kt          # Thready bot implementation
-├── build.gradle.kts
-└── README.md
+App never demotes itself
 
-🔧 Prerequisites
+Sender excluded from DM broadcast
 
-Kotlin/JVM 1.8+
+DM logic avoids duplicate 1:1 creation failures
 
-Gradle (KTS)
+📂 Architecture Overview
+Main.kt
+ ├── WireAppSdk bootstrap
+ ├── ThreadHandler (event listener)
+ │     ├── Command router
+ │     ├── Conversation management
+ │     ├── DM management
+ │     ├── Ping logic
+ │     └── Member tracking cache
 
-A valid Wire API token
+⚠️ Known Limitations
 
-JVM SDK dependency:
+No rate limiting for mass DM
 
-implementation("com.wire:wire-apps-jvm-sdk:<latest-version>")
+No batching for large teams
 
-⚙️ Configuration
+No retry mechanism for DM failures
 
-Set your values inside Main.kt:
+No persistence beyond SDK storage
 
-val sdk = WireAppSdk(
-applicationId = UUID.randomUUID(),
-apiToken = "YOUR_API_TOKEN",
-apiHost = "https://staging-nginz-https.zinfra.io",
-cryptographyStoragePassword = "32_character_password_here",
-wireEventsHandler = NewThreadHandler()
-)
+🧪 Recommended Improvements (Future)
 
-📝 Commands Summary
-Command	Description
-/thread "Topic" @user1 @user2	Creates a new group with the mentioned users
-/newthread "Topic" @users	Same as /thread
-/help	Shows usage instructions
-🛠 How it Works
+Add Admin-only restrictions to broadcast commands
 
-A text message is received by the bot.
+Add retry/backoff for failed DMs
 
-If the message starts with /thread, Thready:
+Add summary report after broadcast
 
-Extracts the title from quotes
+Add rate limiting for large teams
 
-Extracts all mentioned users
+Add audit logging
 
-Creates a new group conversation via createGroupConversationSuspending
+📌 Production Advice
 
-Replies in the original conversation confirming creation
+If used in real environments:
 
-All logic is event-driven using WireEventsHandlerSuspending.
+Protect broadcast commands behind admin-only checks
 
-📁 Example Output
-/thread "Incident – VPN Down" @Alice @Bob
+Add throttling to avoid backend rate limits
 
-→ Thready:
-✅ Created a new group "Incident – VPN Down" with the mentioned members.
+Log failures to external monitoring
 
-🔐 MLS / SDK Limitations
+Add command permissions model
 
-Wire’s MLS rollout currently prevents:
+👤 Author
 
-Bots from immediately sending messages into newly created groups
-(MLS group ID not yet available at creation time)
-
-This means Thready can create groups but cannot automatically ping inside them yet.
-
-The creation works reliably — only the autoping is disabled.
-
-🧩 Future Enhancements
-
-Planned improvements (SDK-limited today):
-
-Auto-admin assignment
-
-/thready "Topic" — create thread with all conversation members (requires SDK support)
-
-Welcome message inside newly created groups (after MLS fix)
-
-Metadata tagging for created threads
+Vinayak Sankar J
