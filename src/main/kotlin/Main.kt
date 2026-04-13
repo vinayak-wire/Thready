@@ -25,10 +25,11 @@ private const val WEBHOOK_PORT      = 8080
 
 // Jira REST API credentials — used to post comments back to Jira
 private const val JIRA_BASE_URL     = "https://wearezeta.atlassian.net"
-private const val JIRA_EMAIL        = "vinayak.sankar@wire.com"
-private const val JIRA_API_TOKEN    = "REMOVED"
+private val JIRA_EMAIL     = System.getenv("JIRA_EMAIL") ?: ""
+private val JIRA_API_TOKEN = System.getenv("JIRA_API_TOKEN") ?: ""
 
 fun getStorageKey(): ByteArray =
+
     ByteArray(32) { (it + 1).toByte() }
 
 fun main() {
